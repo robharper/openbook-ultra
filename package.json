@@ -1,0 +1,16 @@
+{
+  "name": "openbook-ultra",
+  "version": "1.0.0",
+  "description": "Parses NYSE OpenBook Ultra binary format",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "binary": "^0.3.0",
+    "minimist": "^1.1.1",
+    "streamifier": "^0.1.0"
+  }
+}
