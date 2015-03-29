@@ -1,58 +1,50 @@
 var fs = require('fs');
-var format = require('./src/openbook');
+var OpenbookReader = require('./src/openbook/stream-transform');
 
-// var buffer = new Buffer([
-//   0x00, 0x00, 0x00, 0x02, 0x00, 0xe6, 0x01, 0x20, 0x77, 0xdb, 0x42, 0x52, 0x46, 0x53, 0x00, 0x00,
-//   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x0c, 0xc7, 0x01, 0x20, 0x77, 0xda, 0x03, 0x8a, 0x20,
-//   0x50, 0x00, 0x00, 0x00, 0x01, 0x01, 0x04, 0x00, 0x01, 0xa6, 0xa8, 0x00, 0x00, 0x01, 0xf4, 0x00,
-//   0x00, 0x00, 0x00, 0x00, 0x01, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//   0x00, 0x00, 0x00, 0x00, 0x00,
+var opts = require("nomnom")
+   .option('filter', {
+      abbr: 'f',
+      help: 'Symbol filter'
+   })
+   .option('in', {
+      abbr: 'i',
+      help: 'Input file in Openbook Ultra format',
+      required: true
+   })
+   .parse();
 
-//   0x00, 0x00, 0x00, 0x02, 0x00, 0xe6, 0x01, 0x20, 0x77, 0xdb, 0x42, 0x52, 0x46, 0x53, 0x00, 0x00,
-//   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x0c, 0xc7, 0x01, 0x20, 0x77, 0xda, 0x03, 0x8a, 0x20,
-//   0x50, 0x00, 0x00, 0x00, 0x01, 0x01, 0x04, 0x00, 0x01, 0xb9, 0xcc, 0x00, 0x00, 0x00, 0x64, 0x00,
-//   0x00, 0x00, 0x00, 0x00, 0x01, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//   0x00, 0x00, 0x00, 0x00, 0x00
-// ]);
+var readStream = fs.createReadStream(opts.in);
 
-// require('streamifier').createReadStream(buffer).pipe(
-//   format(function(end, vars){
-//     console.log(vars);
-//   })
-// );
-
-var argv = require('minimist')(process.argv.slice(2));
-if (argv._[0]) {
-  var readStream = fs.createReadStream(argv._[0]);
-  readStream.pipe(
-    format(function(end, vars){
-      console.log(
-        vars.MsgSeqNum + '\t' +
-        vars.MsgType + '\t' +
-        vars.SendTime + '\t' +
-        vars.Symbol + '\t' +
-        vars.MsgSize + '\t' +
-        vars.SecurityIndex + '\t' +
-        vars.SourceTime + '\t' +
-        vars.SourceTimeMicroSecs + '\t' +
-        vars.QuoteCondition + '\t' +
-        vars.TradingStatus + '\t' +
-        vars.SourceSeqNum + '\t' +
-        vars.SourceSessionID + '\t' +
-        vars.PriceScaleCode + '\t' +
-        vars.PriceNumerator + '\t' +
-        vars.Price + '\t' +
-        vars.Volume + '\t' +
-        vars.ChgQty + '\t' +
-        vars.NumOrders + '\t' +
-        vars.Side + '\t' +
-        vars.ReasonCode + '\t' +
-        vars.LinkID1 + '\t' +
-        vars.LinkID2 + '\t' +
-        vars.LinkID3
-      );
-    })
-  );
-} else {
-  console.log('Usage: node app.js <filename>')
-}
+readStream
+  .pipe(new OpenbookReader({
+    filter: opts.filter
+  }))
+  .pipe(require('through2').obj(function(chunk, enc, callback){
+    this.push(
+      chunk.MsgSeqNum + '\t' +
+      chunk.MsgType + '\t' +
+      chunk.SendTime + '\t' +
+      chunk.Symbol + '\t' +
+      chunk.MsgSize + '\t' +
+      chunk.SecurityIndex + '\t' +
+      chunk.SourceTime + '\t' +
+      chunk.SourceTimeMicroSecs + '\t' +
+      chunk.QuoteCondition + '\t' +
+      chunk.TradingStatus + '\t' +
+      chunk.SourceSeqNum + '\t' +
+      chunk.SourceSessionID + '\t' +
+      chunk.PriceScaleCode + '\t' +
+      chunk.PriceNumerator + '\t' +
+      chunk.Price + '\t' +
+      chunk.Volume + '\t' +
+      chunk.ChgQty + '\t' +
+      chunk.NumOrders + '\t' +
+      chunk.Side + '\t' +
+      chunk.ReasonCode + '\t' +
+      chunk.LinkID1 + '\t' +
+      chunk.LinkID2 + '\t' +
+      chunk.LinkID3 + '\n'
+    );
+    callback();
+  }))
+  .pipe(process.stdout);
