@@ -1,5 +1,5 @@
 var fs = require('fs');
-var OpenbookReader = require('./src/openbook/stream-transform');
+var OpenbookReader = require('./src/stream-transform');
 
 var opts = require("nomnom")
    .option('filter', {
