@@ -1,5 +1,4 @@
 var fs = require('fs');
-var glob = require('glob');
 var async = require('async');
 
 var opts = require("nomnom")
