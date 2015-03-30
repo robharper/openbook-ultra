@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^0.9.0",
     "nomnom": "^1.8.1",
     "through2": "^0.6.3"
   }

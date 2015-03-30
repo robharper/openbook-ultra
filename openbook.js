@@ -1,4 +1,6 @@
 var fs = require('fs');
+var glob = require('glob');
+var async = require('async');
 
 var opts = require("nomnom")
   .option('output', {
@@ -19,21 +21,23 @@ var opts = require("nomnom")
   .option('file', {
     position: 0,
     metavar: 'FILE',
-    list: false,
+    list: true,
     help: 'Input file in Openbook Ultra format',
     required: true
   })
   .parse();
 
+async.eachSeries(opts.file, function(file, done) {
+  console.error('Starting: ' + file);
 
-var readStream = fs.createReadStream(opts.file);
+  var readStream = fs.createReadStream(file);
+  var outStream = readStream.pipe(require('./src/stream')(opts.filter));
+  if (opts.output === 'csv') {
+    outStream = outStream.pipe(require('./src/csv')(','))
+  } else {
+    outStream = outStream.pipe(require('./src/json')(opts.pretty))
+  }
+  outStream.pipe(process.stdout);
 
-var outStream = readStream.pipe(require('./src/stream')(opts.filter));
-
-if (opts.output === 'csv') {
-  outStream = outStream.pipe(require('./src/csv')(','))
-} else {
-  outStream = outStream.pipe(require('./src/json')(opts.pretty))
-}
-
-outStream.pipe(process.stdout);
+  outStream.on('end', done);
+});
